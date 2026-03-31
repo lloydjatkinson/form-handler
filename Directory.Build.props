@@ -1,0 +1,41 @@
+<Project>
+    <!-- Versioning -->
+    <PropertyGroup>
+      <Copyright>Lloyd Atkinson</Copyright>
+      <PackageProjectUrl>https://github.com/lloydjatkinson/form-handler</PackageProjectUrl>
+      <Version>0.1.0</Version>
+      <FileVersion>0.1.0</FileVersion>
+      <AssemblyVersion>0.1.0</AssemblyVersion>
+    </PropertyGroup>
+
+  <!-- General -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <Nullable>enable</Nullable>
+        <Features>strict</Features>
+        <ImplicitUsings>disable</ImplicitUsings>
+    </PropertyGroup>
+
+    <!-- Build -->
+    <PropertyGroup>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    
+    <!-- Packaging -->
+    <PropertyGroup>
+        <!-- Enable packaging on a per-project basis. -->
+        <IsPackable>false</IsPackable>
+        <IsPublishable>false</IsPublishable>
+
+        <!-- These properties will be used if packaging is enabled for a project -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <Authors>Lloyd Atkinson</Authors>
+        <PackageLicenseExpression>None</PackageLicenseExpression>
+        <Description>Self-hosted form handler with forms as code, built-in validation, and resilient email delivery via outbox pattern.</Description>
+    </PropertyGroup>
+</Project>

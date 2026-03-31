@@ -1,0 +1,52 @@
+﻿<mjml>
+    <mj-head>
+        <mj-attributes>
+            <mj-all font-family="Arial, sans-serif" />
+            <mj-text color="#333333" font-size="14px" line-height="1.6" />
+        </mj-attributes>
+    </mj-head>
+    <mj-body background-color="#f4f4f4">
+
+        <mj-section background-color="{{ branding.primary_color }}" padding="8px 0">
+            <mj-column>
+                <mj-text color="#ffffff" font-size="20px" font-weight="bold">
+                    {{ form.name }}
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+        <mj-section background-color="#ffffff">
+            <mj-column>
+                <mj-text font-size="16px" font-weight="bold">New submission received</mj-text>
+                <mj-divider border-color="{{ branding.secondary_color }}" />
+            </mj-column>
+        </mj-section>
+
+        {{ for field in form.fields }}
+        <mj-section background-color="#ffffff" padding-top="0" padding-bottom="0">
+            <mj-column width="35%">
+                <mj-text font-weight="bold">{{ field.label }}</mj-text>
+            </mj-column>
+            <mj-column width="65%">
+                <mj-text>
+                    {{ submission.values[field.name] }}
+                </mj-text>
+            </mj-column>
+        </mj-section>
+        {{ end }}
+
+        <mj-section>
+            <mj-column>
+                <mj-text font-size="12px" color="#999999" align="center">
+                    Submitted at {{ submission.submitted_at }}
+                </mj-text>
+                {{ if assembly_version }}
+                <mj-text font-size="11px" color="#999999" align="center">
+                    Powered by FormHandler {{ assembly_version }}
+                </mj-text>
+                {{ end }}
+            </mj-column>
+        </mj-section>
+
+    </mj-body>
+</mjml>

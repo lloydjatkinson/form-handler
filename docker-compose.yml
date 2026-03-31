@@ -1,0 +1,38 @@
+services:
+  postgres:
+    build: ./docker/postgres
+    command: postgres -c shared_preload_libraries=pg_stat_statements,pg_cron -c cron.database_name=FormHandler
+    environment:
+      POSTGRES_DB: FormHandler
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  api:
+    image: ${FORM_HANDLER_IMAGE:-form-handler:latest}
+    ports:
+      - "8080:8081"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8081"
+      ConnectionStrings__Default: "Host=postgres;Database=FormHandler;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Email__From__Address: ${EMAIL_FROM_ADDRESS}
+      Email__From__Name: ${EMAIL_FROM_NAME}
+      Email__Smtp__Host: ${EMAIL_SMTP_HOST}
+      Email__Smtp__Port: ${EMAIL_SMTP_PORT}
+      Email__Smtp__Username: ${EMAIL_SMTP_USERNAME}
+      Email__Smtp__Password: ${EMAIL_SMTP_PASSWORD}
+      Logging__FilePath: /logs/app.log
+    volumes:
+      - api_logs:/logs
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  api_logs:

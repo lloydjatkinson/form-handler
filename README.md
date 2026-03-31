@@ -1,2 +1,3 @@
 # form-handler
-A self-hosted resilient form handler. Define forms in code and receive submissions via E-Mail.
+
+Self-hosted form handler with forms as code, built-in validation, and resilient email delivery via outbox pattern.

@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "FormHandler",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "FormHandler",
+      "Username": "postgres",
+      "PassFile": "/tmp/pgpass",
+      "SSLMode": "prefer"
+    }
+  }
+}

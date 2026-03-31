@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".env.example" />
+    <File Path=".github/workflows/dotnet.yml" />
+    <File Path=".github/workflows/release-please.yml" />
+    <File Path=".github/workflows/release-stable-channel.yml" />
+    <File Path=".release-please-manifest.json" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="docker-compose.dev.yml" />
+    <File Path="docker-compose.yml" />
+    <File Path="local-release.ps1" />
+    <File Path="release-please-config.json" />
+  </Folder>
+  <Project Path="src/FormHandler.Api/FormHandler.Api.csproj" Id="090b2cea-7813-49b5-9c38-b9d487966c29" />
+  <Project Path="src/FormHandler.Benchmarks/FormHandler.Benchmarks.csproj" Id="c8c68202-b25e-400d-a7a5-5d076df568aa" />
+  <Project Path="test/FormHandler.UnitTests/FormHandler.Tests/FormHandler.Tests.csproj" Id="94694142-b849-4aa0-8e40-6a2ee072063a" />
+</Solution>
