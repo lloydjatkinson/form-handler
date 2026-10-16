@@ -22,12 +22,7 @@ namespace FormHandler.Api.Infrastructure.Email
 
             message.From.Add(new MailboxAddress(this.options.From.Name, this.options.From.Address));
 
-            if (!MailboxAddress.TryParse(emailOptions.To, out var to))
-            {
-                return new EmailSendResult.Failed($"Invalid recipient address: {emailOptions.To}");
-            }
-
-            message.To.Add(to);
+            message.To.Add(new MailboxAddress(emailOptions.To.DisplayName, emailOptions.To.Address));
 
             foreach (var address in emailOptions.Cc)
             {

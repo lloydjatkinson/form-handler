@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FormHandler.Api;
-using FormHandler.Api.Application;
+using FormHandler.Api.Application.Forms;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -24,7 +24,7 @@ namespace FormHandler.Tests.Endpoints
             builder.UseEnvironment("Testing");
             builder.ConfigureTestServices(services =>
             {
-                services.AddSingleton<IFormRegistry>(new SurveyFormRegistry());
+                services.AddSingleton<IFormDefinitionStore>(RegistrationFormDefinitionStore.Create());
                 services.AddSingleton<TimeProvider>(new FakeTimeProvider());
             });
         }
@@ -49,7 +49,7 @@ namespace FormHandler.Tests.Endpoints
         [Fact]
         public async Task GetFormReturnsOkForKnownFormId()
         {
-            var response = await this.client.GetAsync("/forms/survey", TestContext.Current.CancellationToken);
+            var response = await this.client.GetAsync("/forms/registration", TestContext.Current.CancellationToken);
 
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
@@ -62,24 +62,24 @@ namespace FormHandler.Tests.Endpoints
             response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
 
-        // POST /forms/{formId}/submissions – JSON, valid
+        // POST /forms/{formId}/submissions â€” JSON, valid
 
         [Fact]
         public async Task SubmitJsonWithRequiredFieldsOnlyReturns201()
         {
-            var content = this.Json("""{"name":"Alice","email":"alice@market.example","type":"buyer","produce":["apples"]}""");
+            var content = this.Json("""{"name":"Alice","email":"alice@example.com","enquiryType":"sales","interests":["product"]}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.Created);
         }
 
         [Fact]
-        public async Task SubmitJsonWithMultipleProduceReturns201()
+        public async Task SubmitJsonWithMultipleInterestsReturns201()
         {
-            var content = this.Json("""{"name":"Alice","email":"alice@market.example","type":"buyer","produce":["apples","oranges"]}""");
+            var content = this.Json("""{"name":"Alice","email":"alice@example.com","enquiryType":"sales","interests":["product","pricing"]}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.Created);
         }
@@ -87,33 +87,33 @@ namespace FormHandler.Tests.Endpoints
         [Fact]
         public async Task SubmitJsonWithAllOptionalFieldsReturns201()
         {
-            var content = this.Json("""{"name":"Alice","stall":"Stall 12","email":"alice@market.example","website":"https://alicefarm.example","type":"buyer","produce":["apples"],"preferredDay":"sat","days":["sat","sun"],"quantity":50,"rating":9,"notes":"Please deliver early.","newsletter":true}""");
+            var content = this.Json("""{"name":"Alice","company":"Acme","email":"alice@example.com","website":"https://acme.example","enquiryType":"sales","interests":["product"],"preferredContact":"email","availability":["monday","tuesday"],"teamSize":50,"satisfaction":9,"comments":"Please reply soon.","newsletter":true}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.Created);
         }
 
-        // POST – JSON, bad request (400)
+        // POST â€” JSON, bad request (400)
 
         [Fact]
         public async Task SubmitJsonWithEmptyBodyReturns400()
         {
             var content = new StringContent("", Encoding.UTF8, "application/json");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }
 
-        // POST — JSON, validation errors (400 with errors body)
+        // POST â€” JSON, validation errors (400 with errors body)
 
         [Fact]
         public async Task SubmitJsonWithInvalidOptionReturns400()
         {
-            var content = this.Json("""{"name":"Alice","email":"alice@market.example","type":"middleman","produce":["apples"]}""");
+            var content = this.Json("""{"name":"Alice","email":"alice@example.com","enquiryType":"invalid-option","interests":["product"]}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }
@@ -121,20 +121,20 @@ namespace FormHandler.Tests.Endpoints
         [Fact]
         public async Task SubmitJsonWithInvalidOptionReturnsErrorsForAffectedField()
         {
-            var content = this.Json("""{"name":"Alice","email":"alice@market.example","type":"middleman","produce":["apples"]}""");
+            var content = this.Json("""{"name":"Alice","email":"alice@example.com","enquiryType":"invalid-option","interests":["product"]}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             var body = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
-            body.GetProperty("errors").GetProperty("type").GetArrayLength().ShouldBeGreaterThan(0);
+            body.GetProperty("errors").GetProperty("enquiryType").GetArrayLength().ShouldBeGreaterThan(0);
         }
 
         [Fact]
         public async Task SubmitJsonWithMultipleValuesOnRadioReturns400()
         {
-            var content = this.Json("""{"name":"Alice","email":"alice@market.example","type":["buyer","seller"],"produce":["apples"]}""");
+            var content = this.Json("""{"name":"Alice","email":"alice@example.com","enquiryType":["sales","support"],"interests":["product"]}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }
@@ -142,9 +142,9 @@ namespace FormHandler.Tests.Endpoints
         [Fact]
         public async Task SubmitJsonWithUnknownFieldReturns400()
         {
-            var content = this.Json("""{"name":"Alice","email":"alice@market.example","type":"buyer","produce":["apples"],"sneaky_field":"should be rejected"}""");
+            var content = this.Json("""{"name":"Alice","email":"alice@example.com","enquiryType":"sales","interests":["product"],"sneaky_field":"should be rejected"}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }
@@ -154,7 +154,7 @@ namespace FormHandler.Tests.Endpoints
         {
             var content = this.Json("""{"name":"Alice"}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }
@@ -162,41 +162,41 @@ namespace FormHandler.Tests.Endpoints
         [Fact]
         public async Task SubmitJsonWithNullOnRequiredFieldReturns400()
         {
-            var content = this.Json("""{"name":"Alice","email":"alice@market.example","type":null,"produce":["apples"]}""");
+            var content = this.Json("""{"name":"Alice","email":"alice@example.com","enquiryType":null,"interests":["product"]}""");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }
 
-        // POST – JSON, not found
+        // POST â€” JSON, not found
 
         [Fact]
         public async Task SubmitJsonToUnknownFormReturns404()
         {
-            var content = this.Json("""{"name":"Alice","email":"alice@market.example","type":"buyer","produce":["apples"]}""");
+            var content = this.Json("""{"name":"Alice","email":"alice@example.com","enquiryType":"sales","interests":["product"]}""");
 
             var response = await this.client.PostAsync("/forms/unknown/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.NotFound);
         }
 
-        // POST – wrong content type
+        // POST â€” wrong content type
 
         [Fact]
         public async Task SubmitWithWrongContentTypeReturns415()
         {
             var content = new StringContent(
-                """{"name":"Alice","email":"alice@market.example","type":"buyer","produce":["apples"]}""",
+                """{"name":"Alice","email":"alice@example.com","enquiryType":"sales","interests":["product"]}""",
                 Encoding.UTF8,
                 "text/plain");
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.UnsupportedMediaType);
         }
 
-        // POST – form-encoded
+        // POST â€” form-encoded
 
         [Fact]
         public async Task SubmitFormEncodedWithValidValuesReturns201()
@@ -204,12 +204,12 @@ namespace FormHandler.Tests.Endpoints
             var content = new FormUrlEncodedContent(
             [
                 new KeyValuePair<string, string>("name", "Alice"),
-                new KeyValuePair<string, string>("email", "alice@market.example"),
-                new KeyValuePair<string, string>("type", "buyer"),
-                new KeyValuePair<string, string>("produce", "apples"),
+                new KeyValuePair<string, string>("email", "alice@example.com"),
+                new KeyValuePair<string, string>("enquiryType", "sales"),
+                new KeyValuePair<string, string>("interests", "product"),
             ]);
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.Created);
         }
@@ -220,12 +220,12 @@ namespace FormHandler.Tests.Endpoints
             var content = new FormUrlEncodedContent(
             [
                 new KeyValuePair<string, string>("name", "Alice"),
-                new KeyValuePair<string, string>("email", "alice@market.example"),
-                new KeyValuePair<string, string>("type", "middleman"),
-                new KeyValuePair<string, string>("produce", "apples"),
+                new KeyValuePair<string, string>("email", "alice@example.com"),
+                new KeyValuePair<string, string>("enquiryType", "invalid-option"),
+                new KeyValuePair<string, string>("interests", "product"),
             ]);
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }
@@ -248,10 +248,10 @@ namespace FormHandler.Tests.Endpoints
         {
             var content = new FormUrlEncodedContent(
             [
-                new KeyValuePair<string, string>("stall", "12"),
+                new KeyValuePair<string, string>("company", "Acme"),
             ]);
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }
@@ -262,13 +262,13 @@ namespace FormHandler.Tests.Endpoints
             var content = new FormUrlEncodedContent(
             [
                 new KeyValuePair<string, string>("name", "Alice"),
-                new KeyValuePair<string, string>("email", "alice@market.example"),
-                new KeyValuePair<string, string>("type", "buyer"),
-                new KeyValuePair<string, string>("produce", "apples"),
+                new KeyValuePair<string, string>("email", "alice@example.com"),
+                new KeyValuePair<string, string>("enquiryType", "sales"),
+                new KeyValuePair<string, string>("interests", "product"),
                 new KeyValuePair<string, string>("sneaky_field", "should be rejected"),
             ]);
 
-            var response = await this.client.PostAsync("/forms/survey/submissions", content, TestContext.Current.CancellationToken);
+            var response = await this.client.PostAsync("/forms/registration/submissions", content, TestContext.Current.CancellationToken);
 
             await this.AssertStatusAsync(response, HttpStatusCode.BadRequest);
         }

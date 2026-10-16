@@ -7,8 +7,12 @@ namespace FormHandler.Api.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
+            services.AddOptions<OutboxOptions>()
+                .BindConfiguration("Outbox")
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
             services.AddSingleton(TimeProvider.System);
-            services.AddSingleton<IFormRegistry, FormRegistry>();
             services.AddSingleton<FormSubmissionValidator>();
             services.AddHostedService<OutboxProcessor>();
             return services;

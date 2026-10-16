@@ -71,9 +71,15 @@ namespace FormHandler.Api.Infrastructure.Persistence
             await using var command = connection.CreateCommand();
 
             command.CommandText = """
-                UPDATE form_submissions_outbox
-                SET processed_at = now()
-                WHERE id = $1
+                WITH updated_outbox AS (
+                    UPDATE form_submissions_outbox
+                    SET processed_at = now()
+                    WHERE id = $1
+                    RETURNING submission_id
+                )
+                UPDATE form_submissions
+                SET notified_at = now()
+                WHERE id = (SELECT submission_id FROM updated_outbox)
                 """;
 
             command.Parameters.Add(new NpgsqlParameter<Guid> { TypedValue = outboxId });

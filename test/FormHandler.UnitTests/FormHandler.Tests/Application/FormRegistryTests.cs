@@ -1,89 +1,84 @@
-using System;
-using FormHandler.Api.Application;
 using FormHandler.Api.Domain;
 using FormHandler.Api.Domain.Fields;
 using Shouldly;
 
 namespace FormHandler.Tests.Application
 {
-    public sealed class FormRegistryTests
+    public sealed class FormDefinitionTests
     {
         [Fact]
-        public void ConstructionSucceeds() =>
-            Should.NotThrow(() => new FormRegistry());
-
-        [Fact]
-        public void FindReturnsFormForKnownId()
+        public void ReplyToFieldNameThatMatchesNoFieldProducesError()
         {
-            var registry = new FormRegistry();
+            var (form, errors) = FormDefinition.Create(
+                "test", "Test",
+                new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com"), ReplyToFieldName = "nonexistent" },
+                [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]);
 
-            registry.Find("inbox").ShouldNotBeNull();
+            form.ShouldBeNull();
+            errors.ShouldContain(error => error.Contains("nonexistent"));
         }
 
         [Fact]
-        public void FindReturnsNullForUnknownId()
+        public void ReplyToFieldNameReferencingNonEmailFieldProducesError()
         {
-            var registry = new FormRegistry();
+            var (form, errors) = FormDefinition.Create(
+                "test", "Test",
+                new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com"), ReplyToFieldName = "name" },
+                [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]);
 
-            registry.Find("unknown").ShouldBeNull();
+            form.ShouldBeNull();
+            errors.ShouldContain(error => error.Contains("email field"));
         }
 
         [Fact]
-        public void ValidateFormsThrowsWhenReplyToFieldNameDoesNotMatchAnyField()
+        public void NullReplyToFieldNameProducesNoError()
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com", ReplyToFieldName = "nonexistent" },
-                Fields = [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]
-            };
+            var (form, errors) = FormDefinition.Create(
+                "test", "Test",
+                new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") },
+                [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]);
 
-            Should.Throw<InvalidOperationException>(() => FormRegistry.ValidateForms([form]))
-                .Message.ShouldContain("nonexistent");
+            errors.ShouldBeEmpty();
+            form.ShouldNotBeNull();
         }
 
         [Fact]
-        public void ValidateFormsThrowsWhenReplyToFieldNameReferencesNonEmailField()
+        public void ReplyToFieldNameMatchingEmailFieldProducesNoError()
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com", ReplyToFieldName = "name" },
-                Fields = [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]
-            };
+            var (form, errors) = FormDefinition.Create(
+                "test", "Test",
+                new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com"), ReplyToFieldName = "email" },
+                [new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }]);
 
-            Should.Throw<InvalidOperationException>(() => FormRegistry.ValidateForms([form]))
-                .Message.ShouldContain("email field");
+            errors.ShouldBeEmpty();
+            form.ShouldNotBeNull();
         }
 
         [Fact]
-        public void ValidateFormsDoesNotThrowWhenReplyToFieldNameIsNull()
+        public void BlankReplyToFieldNameProducesError()
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Fields = [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]
-            };
+            var (form, errors) = FormDefinition.Create(
+                "test", "Test",
+                new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com"), ReplyToFieldName = "   " },
+                [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]);
 
-            Should.NotThrow(() => FormRegistry.ValidateForms([form]));
+            form.ShouldBeNull();
+            errors.ShouldContain(error => error.Contains("blank"));
         }
 
         [Fact]
-        public void ValidateFormsDoesNotThrowWhenReplyToFieldNameMatchesEmailField()
+        public void DuplicateFieldNamesProducesError()
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com", ReplyToFieldName = "email" },
-                Fields = [new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }]
-            };
+            var (form, errors) = FormDefinition.Create(
+                "test", "Test",
+                new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") },
+                [
+                    new TextFieldDefinition { Id = "a", Name = "dup", Label = "A" },
+                    new TextFieldDefinition { Id = "b", Name = "dup", Label = "B" }
+                ]);
 
-            Should.NotThrow(() => FormRegistry.ValidateForms([form]));
+            form.ShouldBeNull();
+            errors.ShouldContain(error => error.Contains("duplicate"));
         }
     }
 }

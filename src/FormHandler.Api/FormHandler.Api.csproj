@@ -25,6 +25,7 @@
     <PackageReference Include="Npgsql.DependencyInjection" />
     <PackageReference Include="Mjml.Net" />
     <PackageReference Include="Scriban" />
+    <PackageReference Include="YamlDotNet" />
     <PackageReference Include="Serilog.AspNetCore" />
   </ItemGroup>
 
@@ -34,6 +35,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Templates\StandardEmailTemplate.mjml.scriban" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Forms\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

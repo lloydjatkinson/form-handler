@@ -1,0 +1,25 @@
+id: contact
+name: Contact Us
+
+emailOptions:
+  to: hello@example.com
+  replyToFieldName: email
+
+fields:
+  - type: text
+    id: name
+    name: name
+    label: Your Name
+    isRequired: true
+
+  - type: email
+    id: email
+    name: email
+    label: Email Address
+    isRequired: true
+
+  - type: textArea
+    id: message
+    name: message
+    label: Message
+    isRequired: true

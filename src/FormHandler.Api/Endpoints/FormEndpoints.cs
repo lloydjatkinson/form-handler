@@ -1,6 +1,7 @@
 using System.Text.Json;
-using FormHandler.Api.Application;
+using FormHandler.Api.Application.Forms;
 using FormHandler.Api.Application.Submissions;
+using FormHandler.Api.Domain;
 using FormHandler.Api.Domain.Submissions;
 using FormHandler.Api.Endpoints.Responses;
 
@@ -35,9 +36,9 @@ namespace FormHandler.Api.Endpoints
             return app;
         }
 
-        private static IResult GetForm(IFormRegistry registry, string formId)
+        private static IResult GetForm(IFormDefinitionStore store, string formId)
         {
-            var form = registry.Find(formId);
+            var form = store.FindById(formId);
 
             return form is null
                 ? Results.NotFound()
@@ -46,14 +47,14 @@ namespace FormHandler.Api.Endpoints
 
         private static async Task<IResult> SubmitFormUrlEncoded(
             HttpContext httpContext,
-            IFormRegistry registry,
+            IFormDefinitionStore store,
             FormSubmissionValidator validator,
-            IFormSubmissionStore store,
+            IFormSubmissionStore submissionStore,
             IFormCollection form,
             string formId,
             CancellationToken cancellationToken)
         {
-            var formDefinition = registry.Find(formId);
+            var formDefinition = store.FindById(formId);
 
             if (formDefinition is null)
             {
@@ -62,19 +63,19 @@ namespace FormHandler.Api.Endpoints
 
             var values = FieldValueMapper.FromFormEncoded(formDefinition, form);
 
-            return await HandleSubmission(httpContext, registry, validator, store, values, formId, cancellationToken);
+            return await HandleSubmission(httpContext, formDefinition, validator, submissionStore, values, cancellationToken);
         }
 
         private static async Task<IResult> SubmitFormJson(
             HttpContext httpContext,
-            IFormRegistry registry,
+            IFormDefinitionStore store,
             FormSubmissionValidator validator,
-            IFormSubmissionStore store,
+            IFormSubmissionStore submissionStore,
             Dictionary<string, JsonElement>? body,
             string formId,
             CancellationToken cancellationToken)
         {
-            var formDefinition = registry.Find(formId);
+            var formDefinition = store.FindById(formId);
 
             if (formDefinition is null)
             {
@@ -83,26 +84,18 @@ namespace FormHandler.Api.Endpoints
 
             var values = FieldValueMapper.FromJson(formDefinition, body ?? []);
 
-            return await HandleSubmission(httpContext, registry, validator, store, values, formId, cancellationToken);
+            return await HandleSubmission(httpContext, formDefinition, validator, submissionStore, values, cancellationToken);
         }
 
         private static async Task<IResult> HandleSubmission(
             HttpContext httpContext,
-            IFormRegistry registry,
+            FormDefinition formDefinition,
             FormSubmissionValidator validator,
-            IFormSubmissionStore store,
+            IFormSubmissionStore submissionStore,
             IReadOnlyDictionary<string, FieldValue> values,
-            string formId,
             CancellationToken cancellationToken)
         {
-            var formDefinition = registry.Find(formId);
-
-            if (formDefinition is null)
-            {
-                return Results.NotFound();
-            }
-
-            var submission = new FormSubmission() { FormId = formId, Values = values };
+            var submission = new FormSubmission { FormId = formDefinition.Id, Values = values };
             var result = validator.Validate(formDefinition, submission);
 
             if (result is FormSubmissionResult.Invalid invalid)
@@ -114,7 +107,7 @@ namespace FormHandler.Api.Endpoints
                 return Results.ValidationProblem(errors);
             }
 
-            await store.SaveAsync(submission, httpContext.GetMetadata(), cancellationToken);
+            await submissionStore.SaveAsync(submission, httpContext.GetMetadata(), cancellationToken);
 
             return Results.Created();
         }

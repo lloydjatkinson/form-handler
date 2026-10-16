@@ -1,4 +1,5 @@
 ﻿using FormHandler.Api.Application.Email;
+using FormHandler.Api.Application.Forms;
 using FormHandler.Api.Application.Submissions;
 using Microsoft.Extensions.Options;
 
@@ -8,7 +9,7 @@ namespace FormHandler.Api.Application.Outbox
     {
         private readonly ILogger<OutboxProcessor> logger;
         private readonly TimeProvider timeProvider;
-        private readonly IFormRegistry formRegistry;
+        private readonly IFormDefinitionStore formDefinitionStore;
         private readonly IServiceScopeFactory scopeFactory;
         private readonly ISubmissionEmailComposer emailComposer;
         private readonly IEmailSender emailSender;
@@ -17,7 +18,7 @@ namespace FormHandler.Api.Application.Outbox
         public OutboxProcessor(
             ILogger<OutboxProcessor> logger,
             TimeProvider timeProvider,
-            IFormRegistry formRegistry,
+            IFormDefinitionStore formDefinitionStore,
             IServiceScopeFactory scopeFactory,
             ISubmissionEmailComposer emailComposer,
             IEmailSender emailSender,
@@ -25,7 +26,7 @@ namespace FormHandler.Api.Application.Outbox
         {
             this.logger = logger;
             this.timeProvider = timeProvider;
-            this.formRegistry = formRegistry;
+            this.formDefinitionStore = formDefinitionStore;
             this.scopeFactory = scopeFactory;
             this.emailComposer = emailComposer;
             this.emailSender = emailSender;
@@ -88,11 +89,11 @@ namespace FormHandler.Api.Application.Outbox
                     return;
                 }
 
-                var form = this.formRegistry.Find(submission.FormId);
+                var form = this.formDefinitionStore.FindById(submission.FormId);
                 if (form is null)
                 {
                     this.LogFormNotFound(submission.FormId, entry.SubmissionId);
-                    await this.RecordFailureAsync(outboxStore, entry.OutboxId, entry.SubmissionId, $"Form '{submission.FormId}' not found in registry", cancellationToken);
+                    await this.RecordFailureAsync(outboxStore, entry.OutboxId, entry.SubmissionId, $"Form '{submission.FormId}' not found", cancellationToken);
                     return;
                 }
 
@@ -155,7 +156,7 @@ namespace FormHandler.Api.Application.Outbox
         [LoggerMessage(Level = LogLevel.Error, Message = "Submission {SubmissionId} not found in store")]
         private partial void LogSubmissionNotFound(Guid submissionId);
 
-        [LoggerMessage(Level = LogLevel.Error, Message = "Form {FormId} not found in registry for submission {SubmissionId}")]
+        [LoggerMessage(Level = LogLevel.Error, Message = "Form {FormId} not found for submission {SubmissionId}")]
         private partial void LogFormNotFound(string formId, Guid submissionId);
 
         [LoggerMessage(Level = LogLevel.Warning, Message = "Submission {SubmissionId} failed: {Reason}")]

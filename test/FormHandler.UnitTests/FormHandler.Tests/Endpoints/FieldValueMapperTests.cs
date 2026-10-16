@@ -14,7 +14,7 @@ namespace FormHandler.Tests.Endpoints
     public sealed class FieldValueMapperTests
     {
         private FormDefinition FormWith(params FieldDefinition[] fields) =>
-            new() { Id = "contact", Name = "Contact", EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" }, Fields = [.. fields] };
+            FormDefinition.Create("contact", "Contact", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [.. fields]).Form!;
 
         private CheckboxFieldDefinition Checkbox(string name) =>
             new() { Id = name, Name = name, Label = name };
@@ -94,7 +94,7 @@ namespace FormHandler.Tests.Endpoints
             result["newsletter"].ShouldBe(new FieldValue.Toggle(value));
         }
 
-        // FromFormEncoded — field type mapping
+        // FromFormEncoded ï¿½ field type mapping
 
         [Fact]
         public void FromFormEncodedMapsTextFieldToText()
@@ -149,7 +149,7 @@ namespace FormHandler.Tests.Endpoints
             result["interests"].ShouldBeOfType<FieldValue.Selection>().Values.ShouldBe(["x", "y"]);
         }
 
-        // FromJson — field type mapping
+        // FromJson ï¿½ field type mapping
 
         [Fact]
         public void FromJsonMapsTextFieldToText()
@@ -248,7 +248,7 @@ namespace FormHandler.Tests.Endpoints
             Should.Throw<JsonException>(() => FieldValueMapper.FromJson(form, body));
         }
 
-        // FromJson — type mismatch errors
+        // FromJson ï¿½ type mismatch errors
 
         [Fact]
         public void FromJsonThrowsForNonBooleanCheckboxValue()

@@ -10,7 +10,9 @@ namespace FormHandler.Api.Domain.Fields
             init
             {
                 if (value.Count == 0)
+                {
                     throw new ArgumentException("At least one option is required.", nameof(value));
+                }
 
                 this.options = value;
             }

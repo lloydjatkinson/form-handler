@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using FormHandler.Api.Application;
 using FormHandler.Api.Application.Email;
+using FormHandler.Api.Application.Forms;
 using FormHandler.Api.Application.Outbox;
 using FormHandler.Api.Application.Submissions;
 using FormHandler.Api.Domain;
@@ -24,7 +24,7 @@ namespace FormHandler.Tests.Application
     {
         private readonly FakeLogger<OutboxProcessor> logger = new();
         private readonly FakeTimeProvider timeProvider = new();
-        private readonly IFormRegistry formRegistry = Substitute.For<IFormRegistry>();
+        private readonly IFormDefinitionStore formDefinitionStore = Substitute.For<IFormDefinitionStore>();
         private readonly IServiceScopeFactory scopeFactory = Substitute.For<IServiceScopeFactory>();
         private readonly ISubmissionEmailComposer emailComposer = Substitute.For<ISubmissionEmailComposer>();
         private readonly IEmailSender emailSender = Substitute.For<IEmailSender>();
@@ -44,7 +44,7 @@ namespace FormHandler.Tests.Application
         private OutboxProcessor CreateProcessor() => new(
             this.logger,
             this.timeProvider,
-            this.formRegistry,
+            this.formDefinitionStore,
             this.scopeFactory,
             this.emailComposer,
             this.emailSender,
@@ -95,7 +95,7 @@ namespace FormHandler.Tests.Application
             this.submissionStore
                 .GetSubmissionByIdAsync(entry.SubmissionId, Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<StoredFormSubmission?>(submission));
-            this.formRegistry.Find(submission.FormId).Returns((FormDefinition?)null);
+            this.formDefinitionStore.FindById(submission.FormId).Returns((FormDefinition?)null);
 
             await this.CreateProcessor().ProcessBatchAsync(CancellationToken.None);
 
@@ -115,7 +115,7 @@ namespace FormHandler.Tests.Application
             this.submissionStore
                 .GetSubmissionByIdAsync(entry.SubmissionId, Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<StoredFormSubmission?>(submission));
-            this.formRegistry.Find(submission.FormId).Returns(form);
+            this.formDefinitionStore.FindById(submission.FormId).Returns(form);
             this.emailComposer.Compose(form, submission).Returns(new EmailComposeResult.Failed("compose error"));
 
             await this.CreateProcessor().ProcessBatchAsync(CancellationToken.None);
@@ -132,7 +132,7 @@ namespace FormHandler.Tests.Application
             this.submissionStore
                 .GetSubmissionByIdAsync(entry.SubmissionId, Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<StoredFormSubmission?>(submission));
-            this.formRegistry.Find(submission.FormId).Returns(form);
+            this.formDefinitionStore.FindById(submission.FormId).Returns(form);
             this.emailComposer.Compose(form, submission).Returns(new EmailComposeResult.Composed(email));
             this.emailSender
                 .SendAsync(email, form.EmailOptions, Arg.Any<CancellationToken>())
@@ -152,7 +152,7 @@ namespace FormHandler.Tests.Application
             this.submissionStore
                 .GetSubmissionByIdAsync(entry.SubmissionId, Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<StoredFormSubmission?>(submission));
-            this.formRegistry.Find(submission.FormId).Returns(form);
+            this.formDefinitionStore.FindById(submission.FormId).Returns(form);
             this.emailComposer.Compose(form, submission).Returns(new EmailComposeResult.Composed(email));
             this.emailSender
                 .SendAsync(email, form.EmailOptions, Arg.Any<CancellationToken>())
@@ -197,8 +197,8 @@ namespace FormHandler.Tests.Application
             this.submissionStore
                 .GetSubmissionByIdAsync(entry2.SubmissionId, Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<StoredFormSubmission?>(submission2));
-            this.formRegistry.Find(submission1.FormId).Returns(form1);
-            this.formRegistry.Find(submission2.FormId).Returns(form2);
+            this.formDefinitionStore.FindById(submission1.FormId).Returns(form1);
+            this.formDefinitionStore.FindById(submission2.FormId).Returns(form2);
             this.emailComposer.Compose(form1, submission1).Returns(new EmailComposeResult.Composed(email));
             this.emailComposer.Compose(form2, submission2).Returns(new EmailComposeResult.Composed(email));
             this.emailSender
@@ -227,8 +227,8 @@ namespace FormHandler.Tests.Application
             this.submissionStore
                 .GetSubmissionByIdAsync(entry2.SubmissionId, Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<StoredFormSubmission?>(submission2));
-            this.formRegistry.Find(submission1.FormId).Returns(form1);
-            this.formRegistry.Find(submission2.FormId).Returns(form2);
+            this.formDefinitionStore.FindById(submission1.FormId).Returns(form1);
+            this.formDefinitionStore.FindById(submission2.FormId).Returns(form2);
             this.emailComposer.Compose(form1, submission1).Returns(new EmailComposeResult.Failed("template error"));
             this.emailComposer.Compose(form2, submission2).Returns(new EmailComposeResult.Composed(email));
             this.emailSender
@@ -257,7 +257,7 @@ namespace FormHandler.Tests.Application
             this.submissionStore
                 .GetSubmissionByIdAsync(entry2.SubmissionId, Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<StoredFormSubmission?>(submission2));
-            this.formRegistry.Find(submission2.FormId).Returns(form2);
+            this.formDefinitionStore.FindById(submission2.FormId).Returns(form2);
             this.emailComposer.Compose(form2, submission2).Returns(new EmailComposeResult.Composed(email));
             this.emailSender
                 .SendAsync(email, form2.EmailOptions, Arg.Any<CancellationToken>())
@@ -278,7 +278,7 @@ namespace FormHandler.Tests.Application
             this.submissionStore
                 .GetSubmissionByIdAsync(entry.SubmissionId, Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<StoredFormSubmission?>(submission));
-            this.formRegistry.Find(submission.FormId).Returns(form);
+            this.formDefinitionStore.FindById(submission.FormId).Returns(form);
             this.emailComposer.Compose(form, submission).Returns(new EmailComposeResult.Composed(email));
             this.emailSender
                 .SendAsync(email, form.EmailOptions, Arg.Any<CancellationToken>())

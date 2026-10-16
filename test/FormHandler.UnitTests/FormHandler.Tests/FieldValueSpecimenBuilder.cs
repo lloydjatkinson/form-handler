@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using AutoFixture;
 using AutoFixture.Kernel;
 using FormHandler.Api.Domain.Submissions;

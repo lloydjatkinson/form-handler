@@ -11,20 +11,12 @@ namespace FormHandler.Benchmarks
     {
         private static readonly FormSubmissionValidator Validator = new();
 
-        // Small form: 4 required text fields
-        private static readonly FormDefinition SmallForm = new()
-        {
-            Id = "small",
-            Name = "Small Form",
-            EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-            Fields =
-            [
+        private static readonly FormDefinition SmallForm = FormDefinition.Create("small", "Small Form", new FormSubmissionEmailOptions { To = BenchmarkEmail.Email("test@example.com") }, [
                 new TextFieldDefinition { Id = "f1", Name = "firstName", Label = "First Name", IsRequired = true },
                 new TextFieldDefinition { Id = "f2", Name = "lastName", Label = "Last Name", IsRequired = true },
-                new EmailFieldDefinition { Id = "f3", Name = "email", Label = "EmailOptions", IsRequired = true },
-                new TextAreaFieldDefinition { Id = "f4", Name = "message", Label = "Message", IsRequired = true },
-            ]
-        };
+                new EmailFieldDefinition { Id = "f3", Name = "email", Label = "Email Address", IsRequired = true },
+                new TextAreaFieldDefinition { Id = "f4", Name = "comments", Label = "Comments", IsRequired = true },
+            ]).Form!;
 
         private static readonly FormSubmission SmallValid = new()
         {
@@ -34,7 +26,7 @@ namespace FormHandler.Benchmarks
                 ["firstName"] = new FieldValue.Text("Alice"),
                 ["lastName"] = new FieldValue.Text("Smith"),
                 ["email"] = new FieldValue.Text("alice@example.com"),
-                ["message"] = new FieldValue.Text("Hello there"),
+                ["comments"] = new FieldValue.Text("Hello there"),
             }
         };
 
@@ -47,26 +39,19 @@ namespace FormHandler.Benchmarks
             }
         };
 
-        // Larger form: 10 fields, mixed types
-        private static readonly FormDefinition LargeForm = new()
-        {
-            Id = "large",
-            Name = "Large Form",
-            EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-            Fields =
-            [
+        private static readonly FormDefinition LargeForm = FormDefinition.Create("large", "Large Form", new FormSubmissionEmailOptions { To = BenchmarkEmail.Email("test@example.com") }, [
                 new TextFieldDefinition { Id = "f1", Name = "firstName", Label = "First Name", IsRequired = true },
                 new TextFieldDefinition { Id = "f2", Name = "lastName", Label = "Last Name", IsRequired = true },
-                new EmailFieldDefinition { Id = "f3", Name = "email", Label = "EmailOptions", IsRequired = true },
-                new TextFieldDefinition { Id = "f4", Name = "company", Label = "Company", IsRequired = false },
-                new UrlFieldDefinition { Id = "f5", Name = "website", Label = "Website", IsRequired = false },
-                new SelectFieldDefinition { Id = "f6", Name = "type", Label = "Type", IsRequired = true, Options = [new("buyer", "Buyer"), new("seller", "Seller")] },
-                new CheckboxGroupDefinition { Id = "f7", Name = "interests", Label = "Interests", IsRequired = false, Options = [new("news", "News"), new("offers", "Offers"), new("events", "Events")] },
-                new SliderFieldDefinition { Id = "f8", Name = "rating", Label = "Rating", IsRequired = false, Min = 1, Max = 10 },
-                new TextAreaFieldDefinition { Id = "f9", Name = "message", Label = "Message", IsRequired = true },
-                new CheckboxFieldDefinition { Id = "f10", Name = "newsletter", Label = "Newsletter", IsRequired = false },
-            ]
-        };
+                new EmailFieldDefinition { Id = "f3", Name = "email", Label = "Email Address", IsRequired = true },
+                new UrlFieldDefinition { Id = "f4", Name = "website", Label = "Website", IsRequired = false },
+                new RadioGroupDefinition { Id = "f5", Name = "enquiryType", Label = "Enquiry Type", IsRequired = true, Options = [new("sales", "Sales"), new("support", "Support"), new("other", "Other")] },
+                new CheckboxGroupDefinition { Id = "f6", Name = "interests", Label = "Interests", IsRequired = false, Options = [new("product", "Product"), new("pricing", "Pricing"), new("demo", "Demo")] },
+                new SelectFieldDefinition { Id = "f7", Name = "preferredContact", Label = "Preferred Contact", IsRequired = false, Options = [new("email", "Email"), new("phone", "Phone")] },
+                new NumberFieldDefinition { Id = "f8", Name = "teamSize", Label = "Team Size", IsRequired = false, Min = 0, Max = 10000 },
+                new SliderFieldDefinition { Id = "f9", Name = "satisfaction", Label = "Satisfaction", IsRequired = false, Min = 1, Max = 10 },
+                new TextAreaFieldDefinition { Id = "f10", Name = "comments", Label = "Comments", IsRequired = true },
+                new CheckboxFieldDefinition { Id = "f11", Name = "newsletter", Label = "Newsletter", IsRequired = false },
+            ]).Form!;
 
         private static readonly FormSubmission LargeValid = new()
         {
@@ -76,12 +61,13 @@ namespace FormHandler.Benchmarks
                 ["firstName"] = new FieldValue.Text("Alice"),
                 ["lastName"] = new FieldValue.Text("Smith"),
                 ["email"] = new FieldValue.Text("alice@example.com"),
-                ["company"] = new FieldValue.Text("ACME"),
                 ["website"] = new FieldValue.Text("https://example.com"),
-                ["type"] = new FieldValue.Selection(["buyer"]),
-                ["interests"] = new FieldValue.Selection(["news", "events"]),
-                ["rating"] = new FieldValue.Number(8),
-                ["message"] = new FieldValue.Text("Hello there"),
+                ["enquiryType"] = new FieldValue.Selection(["sales"]),
+                ["interests"] = new FieldValue.Selection(["product", "pricing"]),
+                ["preferredContact"] = new FieldValue.Selection(["email"]),
+                ["teamSize"] = new FieldValue.Number(5),
+                ["satisfaction"] = new FieldValue.Number(8),
+                ["comments"] = new FieldValue.Text("Hello there"),
                 ["newsletter"] = new FieldValue.Toggle(true),
             }
         };
@@ -92,7 +78,7 @@ namespace FormHandler.Benchmarks
             Values = new Dictionary<string, FieldValue>
             {
                 ["firstName"] = new FieldValue.Text("Alice"),
-                ["type"] = new FieldValue.Selection(["middleman"]),
+                ["enquiryType"] = new FieldValue.Selection(["invalid-option"]),
             }
         };
 

@@ -19,17 +19,13 @@ namespace FormHandler.Tests.Infrastructure.Email
         private SubmissionEmailComposer CreateComposer() =>
             new(NullLogger<SubmissionEmailComposer>.Instance, new EmbeddedResourceEmailTemplateProvider());
 
-        private FormDefinition CreateForm(string? replyToFieldName = null) => new()
-        {
-            Id = "test",
-            Name = "Test Form",
-            EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com", ReplyToFieldName = replyToFieldName },
-            Fields =
-            [
-                new TextFieldDefinition { Id = "name", Name = "name", Label = "Full Name" },
-                new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }
-            ]
-        };
+        private FormDefinition CreateForm(string? replyToFieldName = null) =>
+            FormDefinition.Create("test", "Test Form",
+                new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com"), ReplyToFieldName = replyToFieldName },
+                [
+                    new TextFieldDefinition { Id = "name", Name = "name", Label = "Full Name" },
+                    new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }
+                ]).Form!;
 
         private StoredFormSubmission CreateSubmission(FormDefinition form) => new()
         {
@@ -42,13 +38,7 @@ namespace FormHandler.Tests.Infrastructure.Email
 
         private string RenderToPlainText(FieldDefinition field, FieldValue value)
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test Form",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Fields = [field]
-            };
+            var form = FormDefinition.Create("test", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [field]).Form!;
             var submission = new StoredFormSubmission
             {
                 Id = Guid.NewGuid(),
@@ -110,17 +100,10 @@ namespace FormHandler.Tests.Infrastructure.Email
         [Fact]
         public void PlainTextBodyContainsFieldLabelsAndValues()
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test Form",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Fields =
-                [
+            var form = FormDefinition.Create("test", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [
                     new TextFieldDefinition { Id = "name", Name = "name", Label = "Full Name" },
                     new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }
-                ]
-            };
+                ]).Form!;
             var submission = new StoredFormSubmission
             {
                 Id = Guid.NewGuid(),
@@ -154,13 +137,7 @@ namespace FormHandler.Tests.Infrastructure.Email
         [Fact]
         public void ReplyToIsEmailFieldValueWhenReplyToFieldNameIsConfigured()
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test Form",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com", ReplyToFieldName = "email" },
-                Fields = [new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }]
-            };
+            var form = FormDefinition.Create("test", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com"), ReplyToFieldName = "email" }, [new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }]).Form!;
             var submission = new StoredFormSubmission
             {
                 Id = Guid.NewGuid(),
@@ -176,24 +153,9 @@ namespace FormHandler.Tests.Infrastructure.Email
         }
 
         [Fact]
-        public void ReplyToIsNullWhenReplyToFieldNameDoesNotMatchAnyField()
-        {
-            var form = this.CreateForm(replyToFieldName: "nonexistent");
-            var result = this.CreateComposer().Compose(form, this.CreateSubmission(form)).ShouldBeOfType<EmailComposeResult.Composed>();
-
-            result.Email.ReplyTo.ShouldBeNull();
-        }
-
-        [Fact]
         public void ReplyToIsNullWhenFieldNotPresentInSubmission()
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test Form",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com", ReplyToFieldName = "email" },
-                Fields = [new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }]
-            };
+            var form = FormDefinition.Create("test", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com"), ReplyToFieldName = "email" }, [new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email Address" }]).Form!;
             var submission = new StoredFormSubmission
             {
                 Id = Guid.NewGuid(),
@@ -252,13 +214,7 @@ namespace FormHandler.Tests.Infrastructure.Email
         [Fact]
         public void FieldAbsentFromSubmissionRendersAsEmptyValue()
         {
-            var form = new FormDefinition
-            {
-                Id = "test",
-                Name = "Test Form",
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Fields = [new TextFieldDefinition { Id = "notes", Name = "notes", Label = "Notes" }]
-            };
+            var form = FormDefinition.Create("test", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new TextFieldDefinition { Id = "notes", Name = "notes", Label = "Notes" }]).Form!;
             var submission = new StoredFormSubmission
             {
                 Id = Guid.NewGuid(),
@@ -273,21 +229,5 @@ namespace FormHandler.Tests.Infrastructure.Email
             result.Email.PlainTextBody.ShouldContain("Notes:");
         }
 
-        [Fact]
-        public void WarningIsLoggedWhenReplyToFieldNameDoesNotMatchAnyField()
-        {
-            var logger = Substitute.For<ILogger<SubmissionEmailComposer>>();
-            var composer = new SubmissionEmailComposer(logger, new EmbeddedResourceEmailTemplateProvider());
-
-            var form = this.CreateForm(replyToFieldName: "nonexistent");
-            composer.Compose(form, this.CreateSubmission(form));
-
-            logger.Received().Log(
-                LogLevel.Warning,
-                Arg.Any<EventId>(),
-                Arg.Any<object>(),
-                Arg.Any<Exception?>(),
-                Arg.Any<Func<object, Exception?, string>>());
-        }
     }
 }

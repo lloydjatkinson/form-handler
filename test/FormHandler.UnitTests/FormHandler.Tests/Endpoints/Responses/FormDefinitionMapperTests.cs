@@ -12,7 +12,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void FormPropertiesAreMapped()
         {
-            var form = new FormDefinition { EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" }, Id = "test-form", Name = "Test Form", Fields = [] };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, []).Form!;
 
             var response = FormDefinitionMapper.ToResponse(form);
 
@@ -23,13 +23,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void AllFieldTypesMapToCorrectResponseType()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields =
-                [
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [
                     new TextFieldDefinition { Id = "full-name", Name = "fullName", Label = "Full Name" },
                     new EmailFieldDefinition { Id = "email-address", Name = "emailAddress", Label = "Email Address" },
                     new UrlFieldDefinition { Id = "website-url", Name = "websiteUrl", Label = "Website URL" },
@@ -40,8 +34,7 @@ namespace FormHandler.Tests.Endpoints.Responses
                     new SelectFieldDefinition { Id = "country", Name = "country", Label = "Country", Options = [new FieldOption("gb", "United Kingdom")] },
                     new RadioGroupDefinition { Id = "role", Name = "role", Label = "Role", Options = [new FieldOption("developer", "Developer")] },
                     new CheckboxGroupDefinition { Id = "interests", Name = "interests", Label = "Interests", Options = [new FieldOption("frontend", "Frontend")] }
-                ]
-            };
+                ]).Form!;
 
             var fields = FormDefinitionMapper.ToResponse(form).Fields;
 
@@ -60,13 +53,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void BaseFieldPropertiesAreMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new TextFieldDefinition { Id = "first-name", Name = "firstName", Label = "First Name", IsRequired = true }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new TextFieldDefinition { Id = "first-name", Name = "firstName", Label = "First Name", IsRequired = true }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem();
 
@@ -79,13 +66,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void TextFieldSpecificPropertiesAreMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new TextFieldDefinition { Id = "full-name", Name = "fullName", Label = "Full Name", MaxLength = 200, Placeholder = "Enter text" }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new TextFieldDefinition { Id = "full-name", Name = "fullName", Label = "Full Name", MaxLength = 200, Placeholder = "Enter text" }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem().ShouldBeOfType<TextFieldResponse>();
 
@@ -96,13 +77,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void SelectFieldOptionsMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new SelectFieldDefinition { Id = "country", Name = "country", Label = "Country", Options = [new FieldOption("gb", "United Kingdom")] }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new SelectFieldDefinition { Id = "country", Name = "country", Label = "Country", Options = [new FieldOption("gb", "United Kingdom")] }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem().ShouldBeOfType<SelectFieldResponse>();
 
@@ -112,19 +87,13 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void ChoiceFieldOptionsAreMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new RadioGroupDefinition
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new RadioGroupDefinition
                 {
                     Id = "agree-terms",
                     Name = "agreeTerms",
                     Label = "Agree to Terms",
                     Options = [new FieldOption("yes", "Yes"), new FieldOption("no", "No", isDisabled: true)]
-                }]
-            };
+                }]).Form!;
 
             var options = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem().ShouldBeOfType<RadioGroupResponse>().Options;
 
@@ -139,13 +108,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void NumberFieldSpecificPropertiesAreMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new NumberFieldDefinition { Id = "age", Name = "age", Label = "Age", Min = 18, Max = 120, Step = 1 }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new NumberFieldDefinition { Id = "age", Name = "age", Label = "Age", Min = 18, Max = 120, Step = 1 }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem().ShouldBeOfType<NumberFieldResponse>();
 
@@ -157,13 +120,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void SliderFieldSpecificPropertiesAreMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new SliderFieldDefinition { Id = "rating", Name = "rating", Label = "Rating", Min = 1, Max = 10, Step = 1 }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new SliderFieldDefinition { Id = "rating", Name = "rating", Label = "Rating", Min = 1, Max = 10, Step = 1 }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem().ShouldBeOfType<SliderFieldResponse>();
 
@@ -175,13 +132,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void TextAreaFieldSpecificPropertiesAreMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new TextAreaFieldDefinition { Id = "bio", Name = "bio", Label = "Bio", Rows = 4, Cols = 60 }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new TextAreaFieldDefinition { Id = "bio", Name = "bio", Label = "Bio", Rows = 4, Cols = 60 }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem().ShouldBeOfType<TextAreaFieldResponse>();
 
@@ -192,13 +143,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void EmailFieldPlaceholderIsMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email", Placeholder = "you@example.com" }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new EmailFieldDefinition { Id = "email", Name = "email", Label = "Email", Placeholder = "you@example.com" }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem().ShouldBeOfType<EmailFieldResponse>();
 
@@ -208,13 +153,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void UrlFieldPlaceholderIsMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new UrlFieldDefinition { Id = "website", Name = "website", Label = "Website", Placeholder = "https://example.com" }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new UrlFieldDefinition { Id = "website", Name = "website", Label = "Website", Placeholder = "https://example.com" }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem().ShouldBeOfType<UrlFieldResponse>();
 
@@ -224,13 +163,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void FieldAttributesAreMapped()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new TextFieldDefinition { Id = "email", Name = "email", Label = "Email", Attributes = new Dictionary<string, string> { ["data-autocomplete"] = "email" } }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new TextFieldDefinition { Id = "email", Name = "email", Label = "Email", Attributes = new Dictionary<string, string> { ["data-autocomplete"] = "email" } }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem();
 
@@ -241,13 +174,7 @@ namespace FormHandler.Tests.Endpoints.Responses
         [Fact]
         public void EmptyFieldAttributesMapToNull()
         {
-            var form = new FormDefinition
-            {
-                EmailOptions = new FormSubmissionEmailOptions { To = "test@example.com" },
-                Id = "test-form",
-                Name = "Test Form",
-                Fields = [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]
-            };
+            var form = FormDefinition.Create("test-form", "Test Form", new FormSubmissionEmailOptions { To = TestEmail.Email("test@example.com") }, [new TextFieldDefinition { Id = "name", Name = "name", Label = "Name" }]).Form!;
 
             var field = FormDefinitionMapper.ToResponse(form).Fields.ShouldHaveSingleItem();
 

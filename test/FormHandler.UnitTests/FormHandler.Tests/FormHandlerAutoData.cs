@@ -1,4 +1,4 @@
-using AutoFixture;
+﻿using AutoFixture;
 using AutoFixture.Xunit3;
 
 namespace FormHandler.Tests

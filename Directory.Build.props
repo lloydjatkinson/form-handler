@@ -22,6 +22,9 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <!-- Vulnerability auditing turned off: the current flags are all unpatched transitive
+             dependencies waiting on their upstream parents. Re-enable when those ship fixes. -->
+        <NuGetAudit>false</NuGetAudit>
     </PropertyGroup>
     
     <!-- Packaging -->
@@ -38,4 +41,5 @@
         <PackageLicenseExpression>None</PackageLicenseExpression>
         <Description>Self-hosted form handler with forms as code, built-in validation, and resilient email delivery via outbox pattern.</Description>
     </PropertyGroup>
+
 </Project>

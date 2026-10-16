@@ -1,6 +1,7 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Threading.RateLimiting;
 using FormHandler.Api.Application;
+using FormHandler.Api.Application.Forms;
 using FormHandler.Api.Endpoints;
 using FormHandler.Api.Infrastructure;
 using FormHandler.Api.Infrastructure.HealthChecks;
@@ -14,6 +15,8 @@ namespace FormHandler.Api
 {
     public class Program
     {
+        //private static 
+
         public static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
@@ -59,8 +62,8 @@ namespace FormHandler.Api
                 builder.Services.AddOpenApi();
                 builder.Services.AddProblemDetails();
 
+                builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
                 builder.Services.AddApplication();
-                builder.Services.AddInfrastructure(builder.Configuration);
 
                 var app = builder.Build();
 
@@ -116,6 +119,7 @@ namespace FormHandler.Api
             catch (Exception exception)
             {
                 Log.Fatal(exception, "Application terminated unexpectedly");
+                throw;
             }
             finally
             {

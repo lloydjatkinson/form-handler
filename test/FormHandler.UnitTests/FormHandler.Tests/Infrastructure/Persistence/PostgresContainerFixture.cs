@@ -15,6 +15,7 @@ namespace FormHandler.Tests.Infrastructure.Persistence
     {
         private PostgreSqlContainer container = null!;
 
+        public string ConnectionString { get; private set; } = null!;
         public NpgsqlDataSource DataSource { get; private set; } = null!;
 
         private void RunMigrations()
@@ -37,7 +38,8 @@ namespace FormHandler.Tests.Infrastructure.Persistence
                 .Build();
 
             await this.container.StartAsync();
-            this.DataSource = NpgsqlDataSource.Create(this.container.GetConnectionString());
+            this.ConnectionString = this.container.GetConnectionString();
+            this.DataSource = NpgsqlDataSource.Create(this.ConnectionString);
             this.RunMigrations();
         }
 

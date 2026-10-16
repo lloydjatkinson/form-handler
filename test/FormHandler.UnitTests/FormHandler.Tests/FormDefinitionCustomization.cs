@@ -6,6 +6,7 @@ namespace FormHandler.Tests
     {
         public void Customize(IFixture fixture)
         {
+            fixture.Customizations.Add(new FormDefinitionSpecimenBuilder());
             fixture.Customizations.Add(new FieldDefinitionListSpecimenBuilder());
         }
     }
