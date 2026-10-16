@@ -59,13 +59,24 @@ namespace FormHandler.Api.Infrastructure.Email
 
             message.Body = body.ToMessageBody();
 
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(this.options.Smtp.Timeout);
+            var sendToken = timeoutCts.Token;
+
             try
             {
-                using var client = new SmtpClient();
-                await client.ConnectAsync(this.options.Smtp.Host, this.options.Smtp.Port, SecureSocketOptions.Auto, cancellationToken);
-                await client.AuthenticateAsync(this.options.Smtp.Username, this.options.Smtp.Password, cancellationToken);
-                await client.SendAsync(message, cancellationToken);
-                await client.DisconnectAsync(quit: true, cancellationToken);
+                using var client = new SmtpClient
+                {
+                    Timeout = Convert.ToInt32(this.options.Smtp.Timeout.TotalMilliseconds),
+                };
+                await client.ConnectAsync(this.options.Smtp.Host, this.options.Smtp.Port, SecureSocketOptions.Auto, sendToken);
+                await client.AuthenticateAsync(this.options.Smtp.Username, this.options.Smtp.Password, sendToken);
+                await client.SendAsync(message, sendToken);
+                await client.DisconnectAsync(quit: true, sendToken);
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+            {
+                return new EmailSendResult.Failed($"SMTP operation timed out after {this.options.Smtp.Timeout.TotalSeconds:0}s");
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {

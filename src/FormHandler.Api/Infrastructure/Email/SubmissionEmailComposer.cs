@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reflection;
 using System.Text;
 using FormHandler.Api.Application.Email;
@@ -28,7 +28,7 @@ namespace FormHandler.Api.Infrastructure.Email
             this.assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString(3);
             this.emailTemplate = new Lazy<Template>(() =>
             {
-                var template = Template.Parse(templateProvider.GetTemplate("StandardEmailTemplate"));
+                var template = Template.Parse(templateProvider.GetTemplate("EnhancedEmailTemplate"));
 
                 if (template.HasErrors)
                 {

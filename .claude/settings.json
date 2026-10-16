@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:anthonysimmon.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:nicknow.net)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:dotnetfiddle.net)",
+      "Read(//e/Source/form-handler/$USERPROFILE/.nuget/packages/**)",
+      "Bash(find C:/Users/Lloyd/.nuget -name *.dll -path *YamlDotNet*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aaubry/YamlDotNet/master/YamlDotNet/Serialization/DeserializerBuilder.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aaubry/YamlDotNet/master/YamlDotNet/Serialization/BuilderSkeleton.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aaubry/YamlDotNet/master/YamlDotNet/Helpers/LazyComponentRegistrationList.cs\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aaubry/YamlDotNet/master/YamlDotNet/Serialization/Utilities/LazyComponentRegistrationList.cs\")",
+      "Read(//e/tmp/**)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aaubry/YamlDotNet/master/YamlDotNet/Serialization/LazyComponentRegistrationList.cs\")",
+      "Bash(curl -s \"https://api.github.com/repos/aaubry/YamlDotNet/git/trees/master?recursive=1\")",
+      "Bash(curl -s \"https://raw.githubusercontent.com/aaubry/YamlDotNet/master/YamlDotNet/Serialization/LazyComponentRegistrationListExtensions.cs\")",
+      "Bash(PGPASSWORD=dev psql -h localhost -p 5432 -U postgres -d FormHandler -c \"\\\\dt\")",
+      "Bash(docker ps:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker cp:*)",
+      "WebFetch(domain:andrewlock.net)"
+    ]
+  }
+}

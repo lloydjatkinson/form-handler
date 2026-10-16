@@ -63,8 +63,6 @@ namespace FormHandler.Api.Application.Outbox
                 return;
             }
 
-            this.LogBatchStarted(entries.Count);
-
             foreach (var entry in entries)
             {
                 await this.ProcessEntryAsync(entry, submissionStore, outboxStore, cancellationToken);
@@ -77,8 +75,6 @@ namespace FormHandler.Api.Application.Outbox
             IFormSubmissionOutboxStore outboxStore,
             CancellationToken cancellationToken)
         {
-            this.LogProcessingEntry(entry.SubmissionId, entry.Type);
-
             try
             {
                 var submission = await submissionStore.GetSubmissionByIdAsync(entry.SubmissionId, cancellationToken);
@@ -105,6 +101,7 @@ namespace FormHandler.Api.Application.Outbox
                         if (sendResult is EmailSendResult.Sent)
                         {
                             await outboxStore.MarkAsSentAsync(entry.OutboxId, cancellationToken);
+                            this.LogEntrySent(entry.SubmissionId);
                             break;
                         }
 
@@ -147,17 +144,14 @@ namespace FormHandler.Api.Application.Outbox
             this.LogEntryFailed(submissionId, reason);
         }
 
-        [LoggerMessage(Level = LogLevel.Information, Message = "Sending {Count} form submissions")]
-        private partial void LogBatchStarted(int count);
-
-        [LoggerMessage(Level = LogLevel.Debug, Message = "Processing submission {SubmissionId} ({Type})")]
-        private partial void LogProcessingEntry(Guid submissionId, string type);
-
         [LoggerMessage(Level = LogLevel.Error, Message = "Submission {SubmissionId} not found in store")]
         private partial void LogSubmissionNotFound(Guid submissionId);
 
         [LoggerMessage(Level = LogLevel.Error, Message = "Form {FormId} not found for submission {SubmissionId}")]
         private partial void LogFormNotFound(string formId, Guid submissionId);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Submission {SubmissionId} sent")]
+        private partial void LogEntrySent(Guid submissionId);
 
         [LoggerMessage(Level = LogLevel.Warning, Message = "Submission {SubmissionId} failed: {Reason}")]
         private partial void LogEntryFailed(Guid submissionId, string reason);

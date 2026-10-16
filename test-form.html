@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UI Test Form</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+            margin: 0;
+            padding: 40px 16px;
+        }
+        form {
+            max-width: 520px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 28px 28px 32px;
+        }
+        h1 { font-size: 20px; margin: 0 0 20px; }
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 18px 0 6px;
+        }
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #cbd2dc;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+        textarea { min-height: 90px; resize: vertical; }
+        input[type="range"] { width: 100%; }
+        .range-row { display: flex; align-items: center; gap: 12px; }
+        .range-row output {
+            min-width: 28px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+        }
+        button {
+            margin-top: 26px;
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            background: #2563eb;
+            border: 0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+    <form method="post" action="http://localhost:5250/forms/uitest/submissions">
+        <h1>UI Test Form</h1>
+
+        <label for="eventDate">Event Date</label>
+        <input type="date" id="eventDate" name="eventDate" required />
+
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" name="fullName" required />
+
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes"></textarea>
+
+        <label for="quantity">Quantity</label>
+        <input type="number" id="quantity" name="quantity" min="1" max="99" step="1" required />
+
+        <label for="rating">Rating</label>
+        <div class="range-row">
+            <input type="range" id="rating" name="rating" min="0" max="10" step="1" value="5"
+                   oninput="this.nextElementSibling.value = this.value" />
+            <output>5</output>
+        </div>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

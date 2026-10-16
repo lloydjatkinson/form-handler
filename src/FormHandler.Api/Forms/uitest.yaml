@@ -1,0 +1,42 @@
+id: uitest
+name: UI Test Form
+
+emailOptions:
+  to: hello@world.com
+
+fields:
+  - type: text
+    id: eventDate
+    name: eventDate
+    label: Event Date
+    isRequired: true
+
+  - type: text
+    id: fullName
+    name: fullName
+    label: Full Name
+    isRequired: true
+
+  - type: textArea
+    id: notes
+    name: notes
+    label: Notes
+    isRequired: false
+
+  - type: number
+    id: quantity
+    name: quantity
+    label: Quantity
+    isRequired: true
+    min: 1
+    max: 99
+    step: 1
+
+  - type: slider
+    id: rating
+    name: rating
+    label: Rating
+    isRequired: true
+    min: 0
+    max: 10
+    step: 1

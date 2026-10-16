@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)"
+    ],
+    "additionalDirectories": [
+      "e:\\Source\\form-handler\\src\\FormHandler.Api\\Application\\Forms"
+    ]
+  }
+}

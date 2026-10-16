@@ -2,7 +2,7 @@ id: contact
 name: Contact Us
 
 emailOptions:
-  to: hello@example.com
+  to: lloydjatkinson@gmail.com
   replyToFieldName: email
 
 fields:

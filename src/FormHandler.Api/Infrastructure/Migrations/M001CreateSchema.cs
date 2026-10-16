@@ -8,29 +8,6 @@ namespace FormHandler.Api.Infrastructure.Migrations
         public override void Up()
         {
             this.Execute.Sql("""
-            DO $$
-            BEGIN
-                BEGIN
-                    CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-                EXCEPTION WHEN OTHERS THEN NULL;
-                END;
-
-                BEGIN
-                    CREATE EXTENSION IF NOT EXISTS pg_cron;
-                    PERFORM cron.schedule(
-                        'purge-old-outbox-entries',
-                        '0 0 1 */6 *',
-                        $cron$
-                            DELETE FROM form_submissions_outbox
-                            WHERE (processed_at IS NOT NULL OR failed_at IS NOT NULL)
-                              AND created_at < now() - interval '6 months'
-                        $cron$
-                    );
-                EXCEPTION WHEN OTHERS THEN NULL;
-                END;
-            END;
-            $$;
-
             CREATE TABLE form_submissions (
                 id           UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
                 form_id      TEXT        NOT NULL,
@@ -48,7 +25,7 @@ namespace FormHandler.Api.Infrastructure.Migrations
                 submission_id     UUID        NOT NULL REFERENCES form_submissions(id),
                 type              TEXT        NOT NULL,
                 created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-                attempt_count     INT         NOT NULL DEFAULT 0,
+                attempt_count     INT         NOT NULL DEFAULT 0 CHECK (attempt_count >= 0),
                 last_attempted_at TIMESTAMPTZ,
                 last_error        TEXT,
                 processed_at      TIMESTAMPTZ,
@@ -58,29 +35,59 @@ namespace FormHandler.Api.Infrastructure.Migrations
             CREATE INDEX ix_form_submissions_outbox_pending
                 ON form_submissions_outbox (created_at)
                 WHERE processed_at IS NULL AND failed_at IS NULL;
+
+            DO $$
+            BEGIN
+                BEGIN
+                    CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+                EXCEPTION WHEN OTHERS THEN
+                    RAISE WARNING 'Could not install pg_stat_statements: %', SQLERRM;
+                END;
+
+                BEGIN
+                    CREATE EXTENSION IF NOT EXISTS pg_cron;
+                EXCEPTION WHEN OTHERS THEN
+                    RAISE WARNING 'Could not install pg_cron: %', SQLERRM;
+                END;
+
+                IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+                    BEGIN
+                        PERFORM cron.schedule(
+                            'purge-old-outbox-entries',
+                            '0 0 1 */6 *',
+                            $cron$
+                                DELETE FROM form_submissions_outbox
+                                WHERE (processed_at IS NOT NULL OR failed_at IS NOT NULL)
+                                  AND created_at < now() - interval '6 months'
+                            $cron$
+                        );
+                    EXCEPTION WHEN OTHERS THEN
+                        RAISE WARNING 'Could not schedule outbox cleanup: %', SQLERRM;
+                    END;
+                END IF;
+            END;
+            $$;
             """);
         }
 
         public override void Down()
         {
-            this.Delete.Table("form_submissions_outbox");
-            this.Delete.Table("form_submissions");
             this.Execute.Sql("""
             DO $$
             BEGIN
-                BEGIN
-                    PERFORM cron.unschedule('purge-old-outbox-entries');
-                    DROP EXTENSION IF EXISTS pg_cron;
-                EXCEPTION WHEN OTHERS THEN NULL;
-                END;
-
-                BEGIN
-                    DROP EXTENSION IF EXISTS pg_stat_statements;
-                EXCEPTION WHEN OTHERS THEN NULL;
-                END;
+                IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+                    BEGIN
+                        PERFORM cron.unschedule('purge-old-outbox-entries');
+                    EXCEPTION WHEN OTHERS THEN
+                        RAISE WARNING 'Could not remove pg_cron job: %', SQLERRM;
+                    END;
+                END IF;
             END;
             $$;
             """);
+
+            this.Delete.Table("form_submissions_outbox");
+            this.Delete.Table("form_submissions");
         }
     }
 }
