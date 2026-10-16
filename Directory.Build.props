@@ -3,9 +3,9 @@
     <PropertyGroup>
       <Copyright>Lloyd Atkinson</Copyright>
       <PackageProjectUrl>https://github.com/lloydjatkinson/form-handler</PackageProjectUrl>
-      <Version>0.0.2</Version>
-      <FileVersion>0.0.2</FileVersion>
-      <AssemblyVersion>0.0.2</AssemblyVersion>
+      <Version>0.0.3</Version>
+      <FileVersion>0.0.3</FileVersion>
+      <AssemblyVersion>0.0.3</AssemblyVersion>
     </PropertyGroup>
 
   <!-- General -->
